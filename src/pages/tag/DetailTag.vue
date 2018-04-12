@@ -1,48 +1,39 @@
 <template>
-  <div>
-    <Pagebar :page-name="'Tag'" :sub-page-name="'Detail'"/>
-    <div class="portlet light bordered" v-if="tag">
-      <div class="row">
-        <div class="col-xs-8">
-          <h3>Tags Details:</h3>
-          <ul class="list-unstyled">
-            <li>
-              <strong>Id #:</strong> {{tag.id}}
-            </li>
-            <li>
-              <strong>Name:</strong> {{tag.name}}
-            </li>
-            <li>
-              <strong>Description:</strong> {{tag.description}}
-            </li>
-            <li>
-              <strong>Created at:</strong> {{moment.unix(tag.created_at).fromNow()}} ({{moment.unix(tag.created_at).format('DD-MM-YYYY')}})
-            </li>
-          </ul>
-        </div>
-        <div class="col-xs-4">
-          <router-link :to="{name: 'TagEdit', params: {id: tag.id}}"  class="btn btn-icon-only green pull-right">
-            <i class="fa fa-edit"></i>
-          </router-link>
+  <div class="container">
+
+    <div class="row">
+
+      <!-- Blog Entries Column -->
+      <div class="col-md-8">
+        <div v-if="tag">
+          <h1 class="my-4">{{tag.name}}
+            <small>#{{tag.id}}</small>
+          </h1>
+
+          <div class="card mb-4" v-for="collection in tag.collections">
+            <img v-if="!!collection.image" class="card-img-top" :src="collection.image" alt="">
+            <div class="card-body">
+              <h2 class="card-title">{{ collection.name }}</h2>
+              <p class="card-text">{{ collection.description }}</p>
+              <router-link :to="{name: 'CollectionDetail', params: {id: collection.slug}}" class="btn btn-primary">
+                Chi tiết &rarr;
+              </router-link>
+            </div>
+            <div class="card-footer text-muted">
+              {{moment.unix(collection.created_at).fromNow()}}
+            </div>
+          </div>
         </div>
       </div>
+      <!-- Sidebar Widgets Column -->
+      <div class="col-md-4">
+        <!-- Search Widget -->
+        <SearchWidget/>
+      </div>
+
     </div>
-    <div class="portlet light bordered" v-if="false">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Title</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="post in posts.data">
-            <td>{{post.id}}</td>
-            <td>{{post.title}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- /.row -->
+
   </div>
 </template>
 <script>

@@ -1,122 +1,109 @@
 <template>
-  <div class="page-sidebar-wrapper">
-    <div class="page-sidebar navbar-collapse collapse">
-      <ul class="page-sidebar-menu  page-header-fixed " data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200"
-          style="padding-top: 20px">
-        <li class="nav-item start ">
-          <router-link :to="{name: 'Dashboard'}" class="nav-link">
-            <i class="fa fa-dashboard"></i>
-            <span class="title">Dashboard</span>
-          </router-link>
-        </li>
+  <div class="modal fade" id="modalLogin" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLoginLabel">Đăng Nhập</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body omb_login">
+          <form :onsubmit="submit">
+            <div class="form-group">
+              <label class="col-form-label">Email:</label>
+              <input type="email" v-model="email" name="email" v-validate="'required|email'" placeholder="Nhập địa chỉ email" data-vv-delay="500"
+                     :class="{'form-control': true, 'is-invalid': errors.has('email') }">
+              <i v-show="errors.has('email')" class="fa fa-warning"></i>
+              <small v-show="errors.has('email')" class="form-text text-danger">{{ errors.first('email') }}</small>
+            </div>
 
-        <li class="nav-item">
-          <a href="javascript:;" class="nav-link nav-toggle">
-            <i class="fa fa-list-alt"></i>
-            <span class="title">Collection</span>
-            <span class="arrow"></span>
-          </a>
-          <ul class="sub-menu">
-            <li class="nav-item">
-              <router-link :to="{name: 'CollectionList'}" class="nav-link">
-                <i class="fa fa-list"></i>
-                <span class="title">List</span>
-              </router-link>
-            </li>
-            <li class="nav-item">
-              <router-link :to="{name: 'CollectionAdd'}" class="nav-link">
-                <i class="fa fa-plus-square"></i>
-                <span class="title">Add</span>
-              </router-link>
-            </li>
-          </ul>
-        </li>
+            <div class="form-group">
+              <label class="col-form-label">Mật khẩu:</label>
+              <input type="password" v-model="password" name="password" v-validate="'required'" placeholder="Nhập địa chỉ mật khẩu"
+                     :class="{'form-control': true, 'is-invalid': errors.has('password') }">
+              <small v-show="errors.has('password')" class="form-text text-danger">{{ errors.first('password') }}</small>
+            </div>
+          </form>
 
-        <li v-if="false" class="nav-item">
-          <a href="javascript:;" class="nav-link nav-toggle">
-            <i class="fa fa-sitemap"></i>
-            <span class="title">Question</span>
-            <span class="arrow"></span>
-          </a>
-          <ul class="sub-menu">
-            <li class="nav-item">
-              <router-link :to="{name: 'QuestionList'}" class="nav-link">
-                <i class="fa fa-list"></i>
-                <span class="title">List</span>
-              </router-link>
-            </li>
-            <li class="nav-item">
-              <router-link :to="{name: 'QuestionAdd'}" class="nav-link">
-                <i class="fa fa-plus-square"></i>
-                <span class="title">Add</span>
-              </router-link>
-            </li>
-          </ul>
-        </li>
+          <div class="row omb_row-sm-offset-3 omb_loginOr">
+            <div class="col-xs-12 col-sm-6">
+              <hr class="omb_hrOr">
+              <span class="omb_spanOr">hoặc</span>
+            </div>
+          </div>
 
-        <li v-if="false" class="nav-item ">
-          <a class="nav-link nav-toggle">
-            <i class="fa fa-database"></i>
-            <span class="title">Answer</span>
-            <span class="arrow"></span>
-          </a>
-          <ul class="sub-menu">
-            <li class="nav-item">
-              <router-link :to="{name: 'AnswerList'}" class="nav-link">
-                <i class="fa fa-list"></i>
-                <span class="title">List</span>
-              </router-link>
-            </li>
-            <li class="nav-item">
-              <router-link :to="{name: 'AnswerAdd'}" class="nav-link">
-                <i class="fa fa-plus-square"></i>
-                <span class="title">Add</span>
-              </router-link>
-            </li>
-          </ul>
-        </li>
-
-        <li class="nav-item ">
-          <a class="nav-link nav-toggle">
-            <i class="fa fa-tags"></i>
-            <span class="title">Tag</span>
-            <span class="arrow"></span>
-          </a>
-          <ul class="sub-menu">
-            <li class="nav-item">
-              <router-link :to="{name: 'TagList'}" class="nav-link">
-                <i class="fa fa-list"></i>
-                <span class="title">List</span>
-              </router-link>
-            </li>
-            <li class="nav-item">
-              <router-link :to="{name: 'TagAdd'}" class="nav-link">
-                <i class="fa fa-plus-square"></i>
-                <span class="title">Add</span>
-              </router-link>
-            </li>
-          </ul>
-        </li>
-
-        <li class="nav-item">
-          <router-link :to="{name: 'UserList'}" class="nav-link">
-            <i class="fa fa-users"></i>
-            <span class="title">User</span>
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link :to="{name: 'Toolkit'}" class="nav-link">
-            <i class="fa fa-magic"></i>
-            <span class="title">Toolkit</span>
-          </router-link>
-        </li>
-        <li class="nav-item">
-          <router-link :to="{name: 'Dashboard'}" class="nav-link">
-            <i class="fa fa-cogs"></i>
-            <span class="title">Setting</span>
-          </router-link>
-        </li>
-      </ul>
+          <div class="row omb_row-sm-offset-3 omb_socialButtons align-content-center">
+            <div class="col-xs-4">
+              <a href="#" class="btn btn-lg btn-block omb_btn-facebook" @click="authenticate('facebook')">
+                <i class="fa fa-facebook visible-xs"></i>
+                <span class="hidden-xs">Facebook</span>
+              </a>
+            </div>
+            <div class="col-xs-4">
+              <a href="#" class="btn btn-lg btn-block omb_btn-twitter" @click="authenticate('github')">
+                <i class="fa fa-twitter visible-xs"></i>
+                <span class="hidden-xs">Twitter</span>
+              </a>
+            </div>
+            <div class="col-xs-4">
+              <a href="#" class="btn btn-lg btn-block omb_btn-google">
+                <i class="fa fa-google-plus visible-xs"></i>
+                <span class="hidden-xs">Google+</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+          <button type="button" class="btn btn-primary" @click="submit">Xác Nhận</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
+
+
+<script>
+  import {mapActions} from 'vuex'
+  export default {
+    name: 'login',
+    // head: {
+    //   title: {
+    //     inner: 'Login'
+    //   }
+    // },
+    data () {
+      return {
+        email: null,
+        password: null
+      }
+    },
+    methods: {
+      ...mapActions([
+        'login',
+        'updateUser'
+      ]),
+      submit () {
+        this.$validator.validateAll().then((result) => {
+          if (result) {
+            this.login({email: this.email, password: this.password})
+              .then((d) => {
+                // this.updateUser()
+                $('#modalLogin').modal('hide')
+              })
+          }
+        })
+      },
+      authenticate: async function (provider) {
+        this.$auth.authenticate(provider)
+          .then(function (data) {
+            console.log(data)
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      }
+    }
+  }
+</script>

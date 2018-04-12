@@ -1,194 +1,121 @@
 <template>
-  <div>
-    <Pagebar pageName="Dashboard"/>
-    <div class="row" v-if="dashboard">
-      <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="dashboard-stat blue">
-          <div class="visual">
-            <i class="fa fa-users"></i>
+  <div class="container">
+
+    <div class="row">
+
+      <!-- Blog Entries Column -->
+      <div class="col-md-8">
+
+        <h1 class="my-4">Đề Thi
+          <small>mới nhất</small>
+        </h1>
+
+        <!-- Blog Post -->
+        <div class="card mb-4" v-for="collection in collections.data">
+          <img v-if="!!collection.image" class="card-img-top" :src="collection.image" alt="Card image cap">
+          <div class="card-body">
+            <h2 class="card-title">{{ collection.name }}</h2>
+            <p class="card-text">{{ collection.description }}</p>
+            <router-link :to="{name: 'CollectionDetail', params: {id: collection.slug}}" class="btn btn-primary">
+              Chi tiết &rarr;
+            </router-link>
           </div>
-          <div class="details">
-            <div class="number">
-              <span data-counter="counterup" data-value="1349">{{dashboard.collection}}</span>
-            </div>
-            <div class="desc"> Total Collections </div>
+          <div class="card-footer text-muted">
+            {{moment.unix(collection.created_at).fromNow()}}
           </div>
-          <router-link :to="{name: 'CollectionList'}" class="more" href="javascript:;"> View more
-            <i class="m-icon-swapright m-icon-white"></i>
-          </router-link>
         </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Page navigation example" v-if="collections.total / parseInt(collections.per_page, 10) > 1" style="margin-top: 16px;">
+          <ul class="pagination">
+
+            <ul class="pagination" style="visibility: visible;">
+              <li class="page-item">
+                <a @click="collections.current_page !== 1 && updatePageCollection(1)"title="First" class="page-link">
+                  <span aria-hidden="true">&laquo;</span>
+                  <span class="sr-only">First</span>
+                </a>
+              </li>
+              <!--<li class="page-item">-->
+              <!--<a @click="collections.current_page > 1 && updatePageCollection(collections.current_page-1)" title="Prev" class="page-link">-->
+              <!--<span aria-hidden="true">&laquo;</span>-->
+              <!--<span class="sr-only">Previous</span>-->
+              <!--</a>-->
+              <!--</li>-->
+              <li v-for="n in collections.last_page"  :class="['page-item', collections.current_page === n ? 'active' : '']">
+                <a v-if="(collections.current_page - 3 < n && collections.current_page + 3 > n) || n === 1 || n === 2 ||
+                n === collections.last_page || n === (collections.last_page - 1)" @click.prevent="updatePageCollection(n)" class="page-link">
+                  {{n}}
+                </a>
+              </li>
+              <!--<li class="page-item">-->
+              <!--<a @click="collections.current_page < collections.last_page && updatePageCollection(collections.current_page+1)"  title="Next" class="page-link">-->
+              <!--<span aria-hidden="true">&raquo;</span>-->
+              <!--<span class="sr-only">Next</span>-->
+              <!--</a>-->
+              <!--</li>-->
+              <li class="page-item">
+                <a @click="collections.current_page !== collections.last_page && updatePageCollection(collections.last_page)" title="Last" class="page-link">
+                  <span aria-hidden="true">&raquo;</span>
+                  <span class="sr-only">Last</span>
+                </a>
+              </li>
+            </ul>
+          </ul>
+        </nav>
+
       </div>
-      <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="dashboard-stat red">
-          <div class="visual">
-            <i class="fa fa-bar-chart-o"></i>
-          </div>
-          <div class="details">
-            <div class="number">
-              <span data-counter="counterup" data-value="12,5">{{dashboard.question}}</span></div>
-            <div class="desc"> Total Questions </div>
-          </div>
-          <router-link :to="{name: 'QuestionList'}" class="more" href="javascript:;"> View more
-            <i class="m-icon-swapright m-icon-white"></i>
-          </router-link>
-        </div>
+
+      <!-- Sidebar Widgets Column -->
+      <div class="col-md-4">
+
+        <!-- Search Widget -->
+        <SearchWidget/>
+
+        <!-- Categories Widget -->
+        <TagWidget/>
+
       </div>
-      <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="dashboard-stat green">
-          <div class="visual">
-            <i class="fa fa-shopping-cart"></i>
-          </div>
-          <div class="details">
-            <div class="number">
-              <span data-counter="counterup" data-value="549">{{ dashboard.answer }}</span>
-            </div>
-            <div class="desc"> Total Answers </div>
-          </div>
-          <router-link :to="{name: 'AnswerList'}" class="more" href="javascript:;"> View more
-            <i class="m-icon-swapright m-icon-white"></i>
-          </router-link>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-3 col-sm-6 col-xs-12">
-        <div class="dashboard-stat purple">
-          <div class="visual">
-            <i class="fa fa-globe"></i>
-          </div>
-          <div class="details">
-            <div class="number">
-              <span data-counter="counterup" data-value="89">{{ dashboard.tag }}</span>
-            </div>
-            <div class="desc"> Total Tags </div>
-          </div>
-          <router-link :to="{name: 'TagList'}" class="more" href="javascript:;"> View more
-            <i class="m-icon-swapright m-icon-white"></i>
-          </router-link>
-        </div>
-      </div>
+
     </div>
-    <div class="row" v-if="false">
-      <div class="col-md-6 col-sm-6">
-        <div class="portlet light bordered">
-          <div class="portlet-title">
-            <div class="caption">
-              <i class="icon-cursor font-purple"></i>
-              <span class="caption-subject font-purple bold uppercase">General Stats</span>
-            </div>
-            <div class="actions">
-              <a href="javascript:;" class="btn btn-sm btn-circle red easy-pie-chart-reload">
-                <i class="fa fa-repeat"></i> Reload </a>
-            </div>
-          </div>
-          <div class="portlet-body">
-            <div class="row">
-              <div class="col-md-4">
-                <div class="easy-pie-chart">
-                  <div class="number transactions" data-percent="55">
-                    <span>+55</span>% <canvas height="75" width="75"></canvas></div>
-                  <a class="title" href="javascript:;"> Transactions
-                    <i class="icon-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-              <div class="margin-bottom-10 visible-sm"> </div>
-              <div class="col-md-4">
-                <div class="easy-pie-chart">
-                  <div class="number visits" data-percent="85">
-                    <span>+85</span>% <canvas height="75" width="75"></canvas></div>
-                  <a class="title" href="javascript:;"> New Visits
-                    <i class="icon-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-              <div class="margin-bottom-10 visible-sm"> </div>
-              <div class="col-md-4">
-                <div class="easy-pie-chart">
-                  <div class="number bounce" data-percent="46">
-                    <span>-46</span>% <canvas height="75" width="75"></canvas></div>
-                  <a class="title" href="javascript:;"> Bounce
-                    <i class="icon-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6 col-sm-6">
-        <div class="portlet light bordered">
-          <div class="portlet-title">
-            <div class="caption">
-              <i class="icon-equalizer font-yellow"></i>
-              <span class="caption-subject font-yellow bold uppercase">Server Stats</span>
-              <span class="caption-helper">monthly stats...</span>
-            </div>
-            <div class="tools">
-              <a href="" class="collapse" data-original-title="" title=""> </a>
-              <a href="#portlet-config" data-toggle="modal" class="config" data-original-title="" title=""> </a>
-              <a href="" class="reload" data-original-title="" title=""> </a>
-              <a href="" class="remove" data-original-title="" title=""> </a>
-            </div>
-          </div>
-          <div class="portlet-body">
-            <div class="row">
-              <div class="col-md-4">
-                <div class="sparkline-chart">
-                  <div class="number" id="sparkline_bar5"><canvas width="113" height="55" style="display: inline-block; width: 113px; height: 55px; vertical-align: top;"></canvas></div>
-                  <a class="title" href="javascript:;"> Network
-                    <i class="icon-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-              <div class="margin-bottom-10 visible-sm"> </div>
-              <div class="col-md-4">
-                <div class="sparkline-chart">
-                  <div class="number" id="sparkline_bar6"><canvas width="107" height="55" style="display: inline-block; width: 107px; height: 55px; vertical-align: top;"></canvas></div>
-                  <a class="title" href="javascript:;"> CPU Load
-                    <i class="icon-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-              <div class="margin-bottom-10 visible-sm"> </div>
-              <div class="col-md-4">
-                <div class="sparkline-chart">
-                  <div class="number" id="sparkline_line"><canvas width="100" height="55" style="display: inline-block; width: 100px; height: 55px; vertical-align: top;"></canvas></div>
-                  <a class="title" href="javascript:;"> Load Rate
-                    <i class="icon-arrow-right"></i>
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- /.row -->
+
   </div>
 </template>
-
 <script>
-import { Pagebar } from '@/components'
-import {getDashboard} from '@/api'
-
-export default {
-  name: 'dashboard',
-  data () {
-    return {
-      dashboard: null
-    }
-  },
-  components: {
-    Pagebar
-  },
-  created () {
-    this.fetchData()
-  },
-  methods: {
-    fetchData: function () {
-      getDashboard()
-        .then(data => {
-          this.dashboard = data.data
-        })
+  import {mapActions, mapGetters} from 'vuex'
+  export default {
+    data () {
+      return {
+        pageSizeOptions: [
+          5,
+          10,
+          20,
+          50,
+          100
+        ]
+      }
+    },
+    created: function () {
+      // if (this.collections.current_page < 0) {
+      //   this.updatePageCollection(1)
+      // }
+      this.updatePageCollection(1)
+    },
+    computed: mapGetters([
+      'collections'
+    ]),
+    methods: {
+      ...mapActions([
+        'getCollection',
+        'updateSizeCollection',
+        'updatePageCollection',
+        'deleteCollection',
+        'publishCollection'
+      ]),
+      onChangeSize (event) {
+        this.updateSizeCollection(event.srcElement.value)
+      }
     }
   }
-}
 </script>

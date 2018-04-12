@@ -4,7 +4,7 @@ export const convert = () => {
 }
 export function errorApiHandler (error) {
   const {status, data} = error
-  let title = 'Error'
+  let title = 'Lỗi'
   let content = []
   switch (status) {
     case STATUS_CODE.HTTP_UNPROCESSABLE_ENTITY: {
@@ -14,16 +14,16 @@ export function errorApiHandler (error) {
       break
     }
     case STATUS_CODE.HTTP_UNAUTHORIZED: {
-      content.push(data)
+      content.push('Thông tin đăng nhập chưa chính xác')
       // global.vm.$router.push({'name': 'Login'})
       break
     }
     case 400: {
-      content.push('Error occur!!!')
+      content.push('Xảy ra lỗi!!!')
       break
     }
     case 404: {
-      content.push('Opp! Not found')
+      content.push('Opp! Không tìm thấy')
       break
     }
     default: null
@@ -36,7 +36,7 @@ export function successApiHandler (data) {
   showNotification({title: 'Success!!!', content: [data]})
 }
 
-export function showNotification ({title = 'Notification', content = []}, type = 'success') {
+export function showNotification ({title = 'Thông báo', content = []}, type = 'success') {
   let text = ''
   content.forEach(item => {
     text += item + '<br/>'
@@ -51,4 +51,11 @@ export function showNotification ({title = 'Notification', content = []}, type =
 }
 export function getImageById (id) {
   return `${url}image${id}.jpg`
+}
+export function getASStatusTextByid (id) {
+  switch (id) {
+    case 0: return 'Đang làm'
+    case 1: return 'Đã nộp bài'
+    case 2: return 'Đã huỷ'
+  }
 }

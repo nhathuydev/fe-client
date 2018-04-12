@@ -14,7 +14,7 @@ import VueAxios from 'vue-axios'
 import store from './store'
 import router from './router'
 import App from './App'
-import {Pagebar, Navbar, Footerr, Sidebar} from '@/components'
+import {Pagebar, Navbar, Footerr, Sidebar, TagWidget, SearchWidget} from '@/components'
 
 Vue.use(Vuex)
 Vue.use(VueHead)
@@ -26,23 +26,29 @@ Vue.component('Pagebar', Pagebar)
 Vue.component('Navbar', Navbar)
 Vue.component('Footerr', Footerr)
 Vue.component('Sidebar', Sidebar)
+Vue.component('TagWidget', TagWidget)
+Vue.component('SearchWidget', SearchWidget)
 Vue.use(VueAxios, axios)
 Vue.use(VueAuthenticate, {
   providers: {
+    tokenName: 'access_token',
+    baseUrl: 'http://localhost:4000',
+    storageType: 'cookieStorage',
     github: {
       clientId: '627352253ba0227e584a',
-      redirectUri: 'http://tracnghiem.dev/auth/github' // Your client app URL
+      redirectUri: 'http://localhost:8080/auth/github' // Your client app URL
     },
     facebook: {
       clientId: '1534476963302469',
-      redirectUri: 'http://tracnghiem.dev/auth/github' // Your client app URL
+      redirectUri: 'http://localhost:8089/login?driver=facebook' // Your client app URL
     }
   }
 })
+// Vue.use(VueSocketio, 'http://localhost:3000')
 
 Vue.config.productionTip = false
+moment.locale('vi')
 Vue.prototype.moment = moment
-global.token = JSON.parse(window.localStorage.getItem('user'))
 
 /* eslint-disable no-new */
 global.vm = new Vue({

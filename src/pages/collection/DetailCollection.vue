@@ -1,300 +1,204 @@
 <template>
   <div>
-    <Pagebar :page-name="'Collection'" :sub-page-name="'Detail'"/>
-    <div class="portlet light bordered">
-      <div class="portlet-title">
-        <div class="caption">
-          <i class="icon-social-dribbble font-purple-soft"></i>
-          <span class="caption-subject font-purple-soft bold uppercase">{{collection && collection.name}}</span>
-        </div>
-        <div class="actions" v-if="collection">
-          <button @click="$router.go(-1)" class="btn btn-circle btn-icon-only btn-default">
-            <i class="fa fa-arrow-left"></i>
-          </button>
-          <router-link :to="{name: 'CollectionEdit', id: collection.id}" class="btn btn-circle btn-icon-only btn-default">
-            <i class="fa fa-edit"></i>
-          </router-link>
-          <router-link :to="{name: 'CollectionList'}" class="btn btn-circle btn-icon-only btn-default">
-            <i class="fa fa-list-alt"></i>
-          </router-link>
-          <button @click="tooglePublish" class="btn btn-circle btn-icon-only btn-default">
-            <i :class="[{'fa': true}, !collection.isPublish ? 'fa-lock' : 'fa fa-unlock']"></i>
-          </button>
-          <button @click="fetchData" class="btn btn-circle btn-icon-only btn-default">
-            <i :class="['fa fa-refresh', loading ? 'fa-spin' : '']"></i>
-          </button>
-        </div>
-      </div>
-      <div class="portlet-body">
-        <ul class="nav nav-tabs">
-          <li class="active">
-            <a href="#tab_1_1" data-toggle="tab"> Info </a>
-          </li>
-          <li>
-            <a href="#tab_1_2" data-toggle="tab"> Questions
-              <span class="badge badge-info">{{collection && collection.questions.length}}</span>
-            </a>
-          </li>
-          <li>
-            <a href="#tab_1_3" data-toggle="tab"> Add question </a>
-          </li>
-        </ul>
-        <div class="tab-content">
-          <div class="tab-pane fade active in" id="tab_1_1">
-            <div class="row" v-if="collection">
-              <div class="col-xs-8">
-                <h3>{{collection.title}}</h3>
-                <ul class="list-unstyled">
-                  <li>
-                    <strong>Id #:</strong> {{collection.id}}
-                  </li>
-                  <li>
-                    <strong>Name:</strong> {{collection.name}}
-                  </li>
-                  <li>
-                    <strong>Description:</strong> {{collection.description}}
-                  </li>
-                  <li>
-                    <strong>Duration:</strong> {{moment.duration(collection.time, 'seconds').humanize()}}
-                  </li>
-                  <li>
-                    <strong>Status:</strong> <span :class="[{'label': true} ,collection.isPublish ? 'badge badge-info' : ' badge badge-danger']">{{collection.isPublish ? 'Publish' : 'Draft'}}</span>
-                  </li>
-                  <li v-if="collection.category">
-                    <strong>Category:</strong> {{collection.category.name}}
-                  </li>
-                  <li>
-                    <strong>Created at:</strong> {{moment.unix(collection.created_at).fromNow()}}
-                  </li>
-                </ul>
+    <!-- Page Content -->
+    <div class="container">
+
+      <div class="row">
+
+        <!-- Blog Entries Column -->
+        <div class="col-lg-8">
+          <div v-if="!!collection">
+            <h1 class="mt-4">{{collection.name}}</h1>
+
+            <hr>
+
+            <div v-if="!start">
+              <!-- Date/Time -->
+              <p>Ngày đăng: {{moment.unix(collection.created_at).format('DD-MM-YYYY')}} &middot; Thời gian làm bài: {{moment.utc(collection.time*1000).format('HH:mm:ss')}} &middot; Số câu hỏi: {{collection.questions && collection.questions.length}}</p>
+
+              <hr v-if="!!collection.image">
+
+              <!-- Preview Image -->
+              <img class="img img-responsive" style="width: 100%;" :src="collection.image" alt="">
+
+              <hr v-if="!!collection.description">
+
+              <!-- Post Content -->
+
+              <p>{{collection.description}}</p>
+
+              <hr>
+
+              <button v-if="collection.questions.length > 0 && collection.isPublish" type="button" class="btn btn-primary btn-lg" @click="generateAnswerSheet">Bắt đầu làm bài</button>
+            </div>
+
+            <div v-if="start && questions.length > 0">
+              <div class="card">
+                <h5 class="card-header">Câu {{selectedQuestion+1}}: {{questions[selectedQuestion].question.content}}</h5>
+                <div class="card-body">
+                  <img v-if="questions[selectedQuestion].question.extraContent" class="img img-responsive" style="max-height: 200px" :src="questions[selectedQuestion].question.extraContent" alt="">
+
+                  <div class="list-group">
+                    <button v-for="(answer, index) in questions[selectedQuestion].question.answers_without_correct" type="button"
+                            :class="['list-group-item list-group-item-action', {}]"
+                      @click="() => onSelectAnswer(index)"
+                    >
+                      {{answer.content}}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="card-footer text-success">
+                  {{questions[selectedQuestion].question.multiChoice ? '* Có thể chọn nhiều đáp án' : '* Chọn 1 đáp án đúng'}}
+                </div>
+
               </div>
-              <div class="col-xs-4">
-                <img v-if="collection.image" :src="collection.image"  class="img img-thumbnail pull-right" style="max-width: 200px"/>
+
+              <div style="margin-top: 8px;">
+                <button type="button" class="btn btn-primary" @click="onAnswerQuestion">Trả lời</button>
+                <button type="button" class="btn btn-warning" style="color: white" @click="bookmarkQuestion">Đánh dấu</button>
               </div>
             </div>
-          </div>
-          <div class="tab-pane fade" id="tab_1_2">
-            <div class="mt-element-list">
-              <div class="mt-list-container list-todo">
-                <ul v-if="collection && collection.questions">
-                  <li class="mt-list-item" v-for="(question, index) in collection.questions">
-                    <div class="list-todo-item">
-                      <a class="list-toggle-container collapsed" data-toggle="collapse" :href="'#task-' + index+1" aria-expanded="false">
-                        <div class="list-toggle done">
-                          <div class="list-toggle-title bold" style="color: black">Question {{index + 1}}: {{question.content}}</div>
-                          <div class="badge badge-danger font-white bold">{{question.answers.length}}</div>
-                        </div>
-                      </a>
-                      <div class="task-list panel-collapse collapse" :id="'task-' + index+1" aria-expanded="false" style="height: 2px;">
-                        <div v-if="question.explain" style="padding: 24px 16px 0 16px"><p>Expain: {{question.explain}}</p></div>
-                        <ul>
-                          <li class="task-list-item done" v-for="answer in question.answers">
-                            <div class="task-icon">
-                              <a href="javascript:;">
-                                <i class="fa fa-database"></i>
-                              </a>
-                            </div>
-                            <div class="task-status">
-                              <a class="done" href="javascript:;">
-                                <i :class="['fa', answer.pivot.isCorrect ? 'fa-check' : 'fa-close']"></i>
-                              </a>
-                            </div>
-                            <div class="task-content">
-                              <p>{{answer.content}}</p>
-                            </div>
-                          </li>
-                        </ul>
-                        <div class="task-footer bg-grey">
-                          <div class="row">
-                            <div class="col-xs-6">
-                              <router-link :to="{name: 'QuestionDetail', id: 40}" class="task-add">
-                                <i class="fa fa-eye"></i>
-                              </router-link>
-                            </div>
-                            <div class="col-xs-6">
-                              <a class="task-trash" href="javascript:;">
-                                <i class="fa fa-trash"></i>
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div class="tab-pane fade" id="tab_1_3">
-            <form role="form" @submit.prevent="createQuestion">
-              <div class="form-body col-md-6">
-                <div :class="{'form-group': true, 'has-error': errors.has('new_question.content')}">
-                  <label class="control-label">Content</label>
-                  <div class="input-icon right">
-                    <i v-if="errors.has('new_question.content')" class="fa fa-exclamation tooltips" data-original-title="please enter content" data-container="body"></i>
-                    <input
-                      v-model="new_question.content"
-                      name="new_question.content"
-                      v-validate="'required'"
-                      type="text"
-                      class="form-control"
-                      placeholder="Enter question's content">
-                  </div>
-                </div>
-
-                <div class="form-group checkbox">
-                  <label style="margin-left: 24px">
-                    <span><input v-model="new_question.multiChoice" type="checkbox"></span>
-                    Multi answers?
-                  </label>
-                </div>
-
-                <div :class="{'form-group': true, 'has-error': false}">
-                  <label class="control-label">Answers</label>
-                  <button @click.prevent="addAnswerCapacity" class="btn btn-sm btn-circle pull-right"><i class="fa fa-plus"></i></button>
-
-                  <div
-                    v-for="(ans, index) in answers_selected"
-                    :key="index"
-                    class="input-group"
-                    style="margin-top: 16px"
-                  >
-                    <span class="input-group-btn">
-                        <button :class="['btn' , answers_selected[index].isCorrect ? 'green-jungle' : 'red']"
-                          @click.prevent="toogleCorrectAnswer(index)">
-                          <i :class="['fa' , answers_selected[index].isCorrect ? 'fa-check' : 'fa-times']"></i>
-                          <input type="checkbox" v-model="answers_selected[index].isCorrect" hidden>
-                        </button>
-                        <input type="checkbox" v-model="answers_selected[index].isCorrect" hidden>
-                    </span>
-                    <input type="text" v-model="answers_selected[index].content" class="form-control">
-                    <span class="input-group-btn">
-                        <button class="btn blue" @click.prevent="removeAnswerItem(index)">
-                          <i class="fa fa-trash"></i>
-                        </button>
-                    </span>
-
-                  </div>
-                </div>
-
-                <div :class="{'form-group': true, 'has-error': errors.has('new_question.explain')}">
-                  <label class="control-label">Explain</label>
-                  <div class="input-icon right">
-                    <i v-if="errors.has('new_question.explain')" class="fa fa-exclamation tooltips" data-original-title="please enter explain" data-container="body"></i>
-                    <input
-                      v-model="new_question.explain"
-                      name="new_question.explain"
-                      type="text"
-                      class="form-control"
-                      placeholder="Enter question's explaination">
-                  </div>
-                </div>
-
-
-                <div :class="{'form-group': true, 'has-error': false}">
-                  <label class="control-label">Tags</label>
-                  <multiselect
-                    v-model="tags_selected"
-                    tag-placeholder="Add this as new tag"
-                    placeholder="Search or add a tag"
-                    label="name"
-                    track-by="id"
-                    :options="tag_options"
-                    :multiple="true"
-                    :taggable="true"
-                    @tag="addTag"
-                    @search-change="searchTag"
-                  >
-
-                  </multiselect>
-                </div>
-
-              </div>
-              <div class="form-body col-md-6">
-                <img class="img img-responsive img-thumbnail" style="max-height: 200px" :src="new_question.image ? new_question.image : 'http://www.placehold.it/200x150/EFEFEF/AAAAAA&amp;text=no+image'" alt="">
-                <div style="margin-top: 8px">
-                <span class="btn default btn-file">
-                <span v-if="!new_question.image"> Select image </span>
-                <span v-if="new_question.image"> Change </span>
-                  <input type="file" v-validate="'required'" name="new_question.image" @change="onFileChange">
-                </span>
-                  <a @click="removeImage" class="btn red"> Remove </a>
-                </div>
-
-                <div v-html="preview"></div>
-              </div>
-              <div class="form-actions col-md-12">
-                <button type="submit" class="btn blue">Submit</button>
-                <button @click.prevent="$router.go(-1)" class="btn default">Cancel</button>
-              </div>
-            </form>
+            <div v-if="false">{{questions[selectedQuestion]}}</div>
           </div>
         </div>
-        <div class="clearfix margin-bottom-20"> </div>
+
+        <!-- Sidebar Widgets Column -->
+        <div class="col-md-4">
+
+          <!-- Search Widget -->
+         <SearchWidget v-show="!start"/>
+
+          <!-- Categories Widget -->
+          <TagWidget v-show="!start"/>
+
+          <!-- Side Widget -->
+          <div v-if="!start"  class="card my-4">
+            <h5 class="card-header">Thông báo!</h5>
+            <div class="card-body">
+              Chào mừng bạn abcxyz!!!
+            </div>
+          </div>
+
+          <div v-if="start"  class="card my-4">
+            <h5 class="card-header"> Câu hỏi</h5>
+            <div class="card-body">
+              <button
+                  v-for="n in questions.length" type="button"
+                  :class="['btn', generateBtnColorByType(questions[n-1].status)]"
+                  :style="{margin: '8px', 'border-bottom-width': selectedQuestion === (n-1) ? '2px' : '0', 'border-bottom-color': 'red'}"
+                  @click="selectedQuestion=(n-1)">{{n}}</button>
+            </div>
+          </div>
+
+          <div v-if="start"  class="card my-4">
+            <h5 class="card-header"> Chú thích</h5>
+            <div class="card-body">
+              <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Đã trả lời
+                  <button type="button" class="btn btn-primary"></button>
+                </li>
+
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                Chưa xem
+                <button type="button" class="btn btn-secondary"></button>
+              </li>
+
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  Xem lại sau
+                  <button type="button" class="btn btn-warning"></button>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div v-if="start"  class="card my-4">
+            <div class="card-body">
+              <button type="button" class="btn btn-success btn-lg" @click="onFinish">Nộp Bài</button>
+              <button type="button" class="btn btn-danger btn-lg" @click="() => onCancel(false)">Huỷ Bài</button>
+            </div>
+          </div>
+
+        </div>
+
+
       </div>
+      <!-- /.row -->
+
+      <div class="modal fade" id="modalConfirmFinish" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Xác nhận</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              Bạn có chắc muốn kết thúc bài thi
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+              <button type="button" class="btn btn-primary">Đồng ý</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="modalConfirmCancel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Xác nhận</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              Bạn có chắc muốn huỷ bài thi
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+              <button type="button" class="btn btn-primary" @click="() => onCancel(true)">Đồng ý</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
 <script>
-import { detailCollection, createQuestionOfCollection, searchTag, searchAnswer } from '@/api'
+import { detailCollection, createAnswerSheet, updateAnswerSheetStatus } from '@/api'
 import {mapActions} from 'vuex'
 
+const ANSWER_STATUS = {
+  NOT_SEEN: 0,
+  BOOKMARK: 1,
+  ANSWERED: 2
+}
 export default {
   data: () => {
     return {
       collection: null,
+      answerSheetId: null,
       loading: false,
-      new_question: {
-        content: null,
-        explain: null,
-        tags: [],
-        answers: [],
-        image: null,
-        multiChoice: false
-      },
-      tag_options: [],
-      tags_selected: [],
-      answer_options: [],
-      answers_selected: [
-        {
-          content: '',
-          isCorrect: false
-        },
-        {
-          content: '',
-          isCorrect: false
-        }
-      ],
-      preview: ''
+      start: false,
+      questions: [],
+      answerSheet: [],
+      selectedQuestion: -1,
+      selectedAnswer: []
+    }
+  },
+  watch: {
+    selectedQuestion: function () {
+      this.selectedAnswer = new Array(this.questions[this.selectedQuestion].question.answers_without_correct.length)
+      this.selectedAnswer.fill(false)
     }
   },
   created: function () {
     this.fetchData()
-  },
-  watch: {
-    tags_selected: function (value) {
-      const tagsTmp = []
-      for (let i = 0; i < value.length; i++) {
-        if (value[i].id > 0) {
-          tagsTmp.push(value[i].id)
-        } else {
-          tagsTmp.push(value[i].name)
-        }
-      }
-      this.new_question.tags = tagsTmp
-    },
-    'new_question.multiChoice': function (value) {
-      if (!value) {
-        let flagVigrin = true
-        for (let i = 0; i < this.answers_selected.length; i++) {
-          if (!flagVigrin) {
-            this.answers_selected[i].isCorrect = false
-          } else if (this.answers_selected[i].isCorrect && flagVigrin) {
-            flagVigrin = false
-          }
-        }
-      }
-    }
   },
   methods: {
     ...mapActions([
@@ -307,92 +211,44 @@ export default {
         this.loading = false
       })
     },
-    onFileChange (e) {
-      let files = e.target.files || e.dataTransfer.files
-      if (!files.length) return
-      this.createImage(files[0])
-    },
-    createImage (file) {
-      let reader = new FileReader()
-      let vm = this
-
-      reader.onload = (e) => {
-        vm.new_question.image = e.target.result
-      }
-      reader.readAsDataURL(file)
-    },
-    removeImage: function () {
-      this.new_question.image = ''
-    },
-    createQuestion () {
-      const answerTmp = []
-      const value = this.answers_selected
-      for (let i = 0; i < value.length; i++) {
-        answerTmp.push({
-          id: value[i].content,
-          isCorrect: value[i].isCorrect
-        })
-      }
-      this.new_question.answers = answerTmp
-      console.log(this.new_question)
-      createQuestionOfCollection({
-        collection_id: this.collection.id,
-        ...this.new_question
+    generateAnswerSheet: function () {
+      createAnswerSheet(this.collection.id).then(data => {
+        this.answerSheetId = data.data.id
+        this.questions = data.data.answer_sheet_detail.map(item => ({...item, status: ANSWER_STATUS.NOT_SEEN}))
+        this.start = true
+        this.selectedQuestion = 0
       })
     },
-    addTag (newTag) {
-      const tag = {
-        name: newTag,
-        id: -Math.floor((Math.random() * 10000000))
+    generateBtnColorByType: function (type) {
+      switch (type) {
+        case ANSWER_STATUS.NOT_SEEN: return 'btn-secondary'
+        case ANSWER_STATUS.BOOKMARK: return 'btn-warning'
+        case ANSWER_STATUS.ANSWERED: return 'btn-primary'
       }
-      this.tag_options.push(tag)
-      this.tags_selected.push(tag)
     },
-    searchTag (query) {
-      searchTag({keyword: query})
-        .then(data => {
-          this.tag_options = data.data.data
-        })
+    bookmarkQuestion: function () {
+      this.questions[this.selectedQuestion].status = ANSWER_STATUS.BOOKMARK
     },
-    searchAnswer (query) {
-      searchAnswer({keyword: query})
-        .then(data => {
-          this.answer_options = data.data.data
-        })
+    onSelectAnswer: function (index) {
+      this.selectedAnswer[index] = true
     },
-    addAnswerCapacity () {
-      this.answers_selected.push({
-        content: '',
-        isCorrect: false
-      })
+    onAnswerQuestion: function () {
+      console.log(this.selectedAnswer)
     },
-    tooglePublish () {
-      this.publishCollection({ids: [this.collection.id], publish: !this.collection.isPublish})
-        .then(() => {
-          this.collection.isPublish = !this.collection.isPublish
-        })
+    onFinish: function (type) {
+      $('#modalConfirmFinish').modal('toggle')
     },
-    removeAnswerItem (aId) {
-      if (this.answers_selected.length <= 2) {
-        return
-      }
-      this.answers_selected.splice(aId, 1)
-    },
-    toogleCorrectAnswer (aId) {
-      const isMultiChoice = this.new_question.multiChoice
-      if (!isMultiChoice) {
-        let canChoiceMore = true
-        for (let i = 0; i < this.answers_selected.length; i++) {
-          if (this.answers_selected[i].isCorrect && aId !== i) {
-            canChoiceMore = false
-            break
+    onCancel: function (confirmed) {
+      if (!confirmed) {
+        $('#modalConfirmCancel').modal('toggle')
+      } else {
+        updateAnswerSheetStatus(this.answerSheetId, 2).then(data => {
+          if (data.data) {
+            $('#modalConfirmCancel').modal('toggle')
+            this.$router.back()
           }
-        }
-        if (!canChoiceMore) {
-          return
-        }
+        })
       }
-      this.answers_selected[aId].isCorrect = !this.answers_selected[aId].isCorrect
     }
   }
 }

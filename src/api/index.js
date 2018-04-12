@@ -17,8 +17,12 @@ const METHOD = {
   DELTE: 'delete'
 }
 function fetcher (method, inputEndpoint, body, successString = null) {
+  // console.log(store)
   if (inputEndpoint !== API.LOGIN) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${store.getters.token}`
+    const token = store.getters.info && store.getters.info.token
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    }
   }
   let url = inputEndpoint
   let hasSplash = false
@@ -41,7 +45,8 @@ function fetcher (method, inputEndpoint, body, successString = null) {
     }
     console.log(`Request to ${url}`)
   }
-  // console.log(body)
+
+  console.log()
   return new Promise((resolve, reject) => {
     return api[method](url, body)
       .then(response => {
@@ -144,4 +149,21 @@ export function detailAnswer (id) {
 // dashboard
 export function getDashboard () {
   return fetcher(METHOD.GET, API.DASHBOARD)
+}
+
+export function createAnswerSheet (id) {
+  return fetcher(METHOD.POST, API.ANSWER_SHEET + '/' + id)
+}
+
+export function search (keyword) {
+  return fetcher(METHOD.GET, API.SEARCH + '?keyword=' + keyword)
+}
+
+export function updateAnswerSheetStatus (id, status) {
+  return fetcher(METHOD.POST, API.ANSWER_SHEET_UPDATE_STATUS + id, {status})
+}
+
+// GET user answer sheet history
+export function getHistory (payload) {
+  return fetcher(METHOD.GET, API.HISTORY, payload)
 }

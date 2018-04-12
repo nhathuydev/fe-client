@@ -21,7 +21,6 @@ const actions = {
     return new Promise((resolve, reject) => {
       login(email, password)
         .then(result => {
-          console.log(result)
           if (result.data.error === 'invalid_credentials') {
             showNotification({content: [result.data.message]}, 'error')
             reject()
